@@ -353,7 +353,6 @@ fn test_wrapped_line_cursor_positioning() {
         start_x, GUTTER_WIDTH,
         "Cursor at position 0 should be at x={GUTTER_WIDTH} (after gutter)"
     );
-    eprintln!("After Home: buffer_pos=0, screen=({start_x}, {start_y})");
 
     // Verify the beginning of the text is visible on screen
     let screen = harness.screen_to_string();

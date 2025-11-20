@@ -1425,13 +1425,13 @@ impl SplitRenderer {
 
                     // Track cursor position for primary cursor
                     if is_primary_at_end && last_seg_y.is_some() {
-                        // For empty lines, cursor should be at position 0
+                        // Cursor position now includes gutter width (consistent with main cursor tracking)
+                        // For empty lines, cursor is at gutter width (right after gutter)
                         // For non-empty lines without newline, cursor is after the last character
-                        // Use line_len_chars since last_visible_x may not be set for non-wrapped lines
                         cursor_screen_x = if line_len_chars == 0 {
-                            0
+                            gutter_width as u16
                         } else {
-                            line_len_chars as u16
+                            gutter_width as u16 + line_len_chars as u16
                         };
                         cursor_screen_y = last_seg_y.unwrap();
                         have_cursor = true;
@@ -1504,14 +1504,16 @@ impl SplitRenderer {
                     let newline_idx = view_end_idx.saturating_sub(1);
                     if let Some(Some(src_newline)) = view_mapping.get(newline_idx) {
                         if *src_newline == primary_cursor_position {
-                            // For empty lines (just newline), cursor should be at start of current line
+                            // Cursor position now includes gutter width (consistent with main cursor tracking)
+                            // For empty lines (just newline), cursor should be at gutter width (after gutter)
                             // For lines with content, cursor on newline should be after the content
                             if line_content.chars().count() == 1 {
                                 // Empty line - just the newline character
-                                cursor_screen_x = 0;
+                                cursor_screen_x = gutter_width as u16;
                                 cursor_screen_y = y;
                             } else {
                                 // Line has content before the newline - cursor after last char
+                                // end_x already includes gutter (from last_visible_x)
                                 cursor_screen_x = end_x;
                                 cursor_screen_y = y;
                             }
@@ -1713,10 +1715,8 @@ impl SplitRenderer {
 
         if is_active && state.show_cursors && !hide_cursor {
             if let Some((cursor_screen_x, cursor_screen_y)) = cursor {
-                let screen_x = render_area
-                    .x
-                    .saturating_add(cursor_screen_x)
-                    .saturating_add(gutter_width as u16);
+                // cursor_screen_x already includes gutter width from line_view_map
+                let screen_x = render_area.x.saturating_add(cursor_screen_x);
                 let screen_y = render_area.y.saturating_add(cursor_screen_y);
 
                 frame.set_cursor_position((screen_x, screen_y));
