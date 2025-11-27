@@ -258,11 +258,15 @@ impl LspClient {
         let id = self.next_id;
         self.next_id += 1;
 
+        let params_value = params
+            .map(|p| serde_json::to_value(p))
+            .transpose()
+            .map_err(|e| format!("Failed to serialize params: {}", e))?;
         let request = JsonRpcRequest {
             jsonrpc: "2.0".to_string(),
             id,
             method: method.to_string(),
-            params: params.map(|p| serde_json::to_value(p).expect("Failed to serialize params")),
+            params: params_value,
         };
 
         self.pending.insert(id, ());
@@ -311,10 +315,14 @@ impl LspClient {
         method: &str,
         params: Option<P>,
     ) -> Result<(), String> {
+        let params_value = params
+            .map(|p| serde_json::to_value(p))
+            .transpose()
+            .map_err(|e| format!("Failed to serialize params: {}", e))?;
         let notification = JsonRpcNotification {
             jsonrpc: "2.0".to_string(),
             method: method.to_string(),
-            params: params.map(|p| serde_json::to_value(p).expect("Failed to serialize params")),
+            params: params_value,
         };
 
         self.write_message(&notification)

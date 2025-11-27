@@ -392,7 +392,10 @@ impl LspState {
         let notification = JsonRpcNotification {
             jsonrpc: "2.0".to_string(),
             method: N::METHOD.to_string(),
-            params: Some(serde_json::to_value(params).expect("Failed to serialize params")),
+            params: Some(
+                serde_json::to_value(params)
+                    .map_err(|e| format!("Failed to serialize params: {}", e))?,
+            ),
         };
 
         self.write_message(&notification).await
@@ -426,11 +429,15 @@ impl LspState {
             tracing::debug!("Tracking request: editor_id={}, lsp_id={}", editor_id, id);
         }
 
+        let params_value = params
+            .map(|p| serde_json::to_value(p))
+            .transpose()
+            .map_err(|e| format!("Failed to serialize params: {}", e))?;
         let request = JsonRpcRequest {
             jsonrpc: "2.0".to_string(),
             id,
             method: method.to_string(),
-            params: params.map(|p| serde_json::to_value(p).expect("Failed to serialize params")),
+            params: params_value,
         };
 
         let (tx, rx) = oneshot::channel();
@@ -2148,11 +2155,15 @@ impl LspTask {
         let id = self.next_id;
         self.next_id += 1;
 
+        let params_value = params
+            .map(|p| serde_json::to_value(p))
+            .transpose()
+            .map_err(|e| format!("Failed to serialize params: {}", e))?;
         let request = JsonRpcRequest {
             jsonrpc: "2.0".to_string(),
             id,
             method: method.to_string(),
-            params: params.map(|p| serde_json::to_value(p).expect("Failed to serialize params")),
+            params: params_value,
         };
 
         let (tx, rx) = oneshot::channel();
@@ -2208,11 +2219,15 @@ impl LspTask {
         let id = self.next_id;
         self.next_id += 1;
 
+        let params_value = params
+            .map(|p| serde_json::to_value(p))
+            .transpose()
+            .map_err(|e| format!("Failed to serialize params: {}", e))?;
         let request = JsonRpcRequest {
             jsonrpc: "2.0".to_string(),
             id,
             method: method.to_string(),
-            params: params.map(|p| serde_json::to_value(p).expect("Failed to serialize params")),
+            params: params_value,
         };
 
         let (tx, rx) = oneshot::channel();
@@ -2236,7 +2251,10 @@ impl LspTask {
         let notification = JsonRpcNotification {
             jsonrpc: "2.0".to_string(),
             method: N::METHOD.to_string(),
-            params: Some(serde_json::to_value(params).expect("Failed to serialize params")),
+            params: Some(
+                serde_json::to_value(params)
+                    .map_err(|e| format!("Failed to serialize params: {}", e))?,
+            ),
         };
 
         self.write_message(&notification).await
