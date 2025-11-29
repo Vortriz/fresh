@@ -49,7 +49,7 @@ npx @fresh-editor/fresh-editor
 
 ### Pre-built binaries
 
-Download the latest release for your platform from the [releases page](httpss://github.com/sinelaw/fresh/releases).
+Download the latest release for your platform from the [releases page](https://github.com/sinelaw/fresh/releases).
 
 ### From crates.io
 
