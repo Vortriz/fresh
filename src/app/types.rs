@@ -282,6 +282,10 @@ pub enum HoverTarget {
     TabName(BufferId, SplitId),
     /// Hovering over a tab close button (buffer_id, split_id)
     TabCloseButton(BufferId, SplitId),
+    /// Hovering over a close split button (split_id)
+    CloseSplitButton(SplitId),
+    /// Hovering over the file explorer close button
+    FileExplorerCloseButton,
 }
 
 /// Mouse state tracking
@@ -334,4 +338,7 @@ pub(super) struct CachedLayout {
     /// (split_id, buffer_id, tab_row, tab_start_col, tab_end_col, close_button_start_col)
     /// The close button spans from close_button_start_col to tab_end_col
     pub tab_areas: Vec<(SplitId, BufferId, u16, u16, u16, u16)>,
+    /// Close split button hit areas
+    /// (split_id, row, start_col, end_col)
+    pub close_split_areas: Vec<(SplitId, u16, u16, u16)>,
 }

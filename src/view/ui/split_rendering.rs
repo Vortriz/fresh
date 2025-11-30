@@ -390,6 +390,7 @@ impl SplitRenderer {
         >,
         hide_cursor: bool,
         hovered_tab: Option<(BufferId, crate::model::event::SplitId, bool)>, // (buffer_id, split_id, is_close_button)
+        hovered_close_split: Option<crate::model::event::SplitId>,
     ) -> (
         Vec<(
             crate::model::event::SplitId,
@@ -400,16 +401,19 @@ impl SplitRenderer {
             usize,
         )>,
         Vec<(crate::model::event::SplitId, BufferId, u16, u16, u16, u16)>,
+        Vec<(crate::model::event::SplitId, u16, u16, u16)>, // close split button areas
     ) {
         let _span = tracing::trace_span!("render_content").entered();
 
         // Get all visible splits with their areas
         let visible_buffers = split_manager.get_visible_buffers(area);
         let active_split_id = split_manager.active_split();
+        let has_multiple_splits = visible_buffers.len() > 1;
 
         // Collect areas for mouse handling
         let mut split_areas = Vec::new();
         let mut all_tab_areas = Vec::new();
+        let mut close_split_areas = Vec::new();
 
         // Render each split
         for (split_id, buffer_id, split_area) in visible_buffers {
@@ -446,6 +450,22 @@ impl SplitRenderer {
             let tab_row = layout.tabs_rect.y;
             for (buf_id, start_col, end_col, close_start) in tab_hit_areas {
                 all_tab_areas.push((split_id, buf_id, tab_row, start_col, end_col, close_start));
+            }
+
+            // Render close split button "×" at the right side of tabs row (when multiple splits)
+            if has_multiple_splits {
+                let close_x = layout.tabs_rect.x + layout.tabs_rect.width.saturating_sub(2);
+                let is_hovered = hovered_close_split == Some(split_id);
+                let close_fg = if is_hovered {
+                    theme.tab_close_hover_fg
+                } else {
+                    theme.line_number_fg
+                };
+                let close_button = Paragraph::new("×")
+                    .style(Style::default().fg(close_fg).bg(theme.tab_separator_bg));
+                let close_area = Rect::new(close_x, tab_row, 1, 1);
+                frame.render_widget(close_button, close_area);
+                close_split_areas.push((split_id, tab_row, close_x, close_x + 1));
             }
 
             // Get references separately to avoid double borrow
@@ -518,7 +538,7 @@ impl SplitRenderer {
             Self::render_separator(frame, direction, x, y, length, theme);
         }
 
-        (split_areas, all_tab_areas)
+        (split_areas, all_tab_areas, close_split_areas)
     }
 
     /// Render a split separator line

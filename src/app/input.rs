@@ -2353,8 +2353,17 @@ impl Editor {
             }
         }
 
-        // Check file explorer border (for resize)
+        // Check file explorer close button and border (for resize)
         if let Some(explorer_area) = self.cached_layout.file_explorer_area {
+            // Close button is at position: explorer_area.x + explorer_area.width - 3 to -1
+            let close_button_x = explorer_area.x + explorer_area.width.saturating_sub(3);
+            if row == explorer_area.y
+                && col >= close_button_x
+                && col < explorer_area.x + explorer_area.width
+            {
+                return Some(HoverTarget::FileExplorerCloseButton);
+            }
+
             // The border is at the right edge of the file explorer area
             let border_x = explorer_area.x + explorer_area.width;
             if col == border_x
@@ -2382,6 +2391,13 @@ impl Editor {
         }
 
         // Check tab areas using cached hit regions (computed during rendering)
+        // Check close split buttons first (they're on top of the tab row)
+        for (split_id, btn_row, start_col, end_col) in &self.cached_layout.close_split_areas {
+            if row == *btn_row && col >= *start_col && col < *end_col {
+                return Some(HoverTarget::CloseSplitButton(*split_id));
+            }
+        }
+
         for (split_id, buffer_id, tab_row, start_col, end_col, close_start) in
             &self.cached_layout.tab_areas
         {
@@ -2666,6 +2682,30 @@ impl Editor {
                 }
                 return Ok(());
             }
+        }
+
+        // Check if click is on a close split button
+        let close_split_click = self
+            .cached_layout
+            .close_split_areas
+            .iter()
+            .find(|(_, btn_row, start_col, end_col)| {
+                row == *btn_row && col >= *start_col && col < *end_col
+            })
+            .map(|(split_id, _, _, _)| *split_id);
+
+        if let Some(split_id) = close_split_click {
+            if let Err(e) = self.split_manager.close_split(split_id) {
+                self.set_status_message(format!("Cannot close split: {}", e));
+            } else {
+                // Update active buffer to match the new active split
+                let new_active_split = self.split_manager.active_split();
+                if let Some(buffer_id) = self.split_manager.buffer_for_split(new_active_split) {
+                    self.set_active_buffer(buffer_id);
+                }
+                self.set_status_message("Split closed".to_string());
+            }
+            return Ok(());
         }
 
         // Check if click is on a tab using cached hit areas (computed during rendering)
@@ -3354,10 +3394,21 @@ impl Editor {
     /// Handle click in file explorer
     pub(super) fn handle_file_explorer_click(
         &mut self,
-        _col: u16,
+        col: u16,
         row: u16,
         explorer_area: ratatui::layout::Rect,
     ) -> std::io::Result<()> {
+        // Check if click is on the title bar (first row)
+        if row == explorer_area.y {
+            // Check if click is on close button (× at right side of title bar)
+            // Close button is at position: explorer_area.x + explorer_area.width - 3 to -1
+            let close_button_x = explorer_area.x + explorer_area.width.saturating_sub(3);
+            if col >= close_button_x && col < explorer_area.x + explorer_area.width {
+                self.toggle_file_explorer();
+                return Ok(());
+            }
+        }
+
         // Focus file explorer
         self.key_context = crate::input::keybindings::KeyContext::FileExplorer;
 

@@ -24,6 +24,7 @@ impl FileExplorerRenderer {
         keybinding_resolver: &crate::input::keybindings::KeybindingResolver,
         current_context: crate::input::keybindings::KeyContext,
         theme: &Theme,
+        close_button_hovered: bool,
     ) {
         // Update viewport height for scrolling calculations
         // Account for borders (top + bottom = 2)
@@ -116,6 +117,18 @@ impl FileExplorerRenderer {
         }
 
         frame.render_stateful_widget(list, area, &mut list_state);
+
+        // Render close button "×" at the right side of the title bar
+        let close_button_x = area.x + area.width.saturating_sub(3);
+        let close_fg = if close_button_hovered {
+            theme.tab_close_hover_fg
+        } else {
+            theme.line_number_fg
+        };
+        let close_button = ratatui::widgets::Paragraph::new("×")
+            .style(Style::default().fg(close_fg));
+        let close_area = Rect::new(close_button_x, area.y, 1, 1);
+        frame.render_widget(close_button, close_area);
 
         // When focused, show a blinking cursor indicator at the selected row
         // We render a cursor indicator character and position the hardware cursor there

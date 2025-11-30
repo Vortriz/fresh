@@ -104,6 +104,10 @@ impl Editor {
                     }
                 }
 
+                let close_button_hovered = matches!(
+                    &self.mouse_state.hover_target,
+                    Some(HoverTarget::FileExplorerCloseButton)
+                );
                 FileExplorerRenderer::render(
                     explorer,
                     frame,
@@ -113,6 +117,7 @@ impl Editor {
                     &self.keybindings,
                     self.key_context,
                     &self.theme,
+                    close_button_hovered,
                 );
             }
         } else {
@@ -252,7 +257,13 @@ impl Editor {
             _ => None,
         };
 
-        let (split_areas, tab_areas) = SplitRenderer::render_content(
+        // Get hovered close split button
+        let hovered_close_split = match &self.mouse_state.hover_target {
+            Some(HoverTarget::CloseSplitButton(split_id)) => Some(*split_id),
+            _ => None,
+        };
+
+        let (split_areas, tab_areas, close_split_areas) = SplitRenderer::render_content(
             frame,
             editor_content_area,
             &self.split_manager,
@@ -269,9 +280,11 @@ impl Editor {
             Some(&self.split_view_states),
             hide_cursor,
             hovered_tab,
+            hovered_close_split,
         );
         self.cached_layout.split_areas = split_areas;
         self.cached_layout.tab_areas = tab_areas;
+        self.cached_layout.close_split_areas = close_split_areas;
         self.cached_layout.separator_areas = self
             .split_manager
             .get_separators_with_ids(editor_content_area);
