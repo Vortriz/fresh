@@ -1,6 +1,25 @@
 ## Release Notes
 
-### v0.1.12 (Unreleased)
+### v0.1.13 (Unreleased)
+
+#### Features
+
+* **Git Gutter Plugin**: Shows git diff indicators in the gutter for lines changed vs HEAD:
+  - │ (green): Added line
+  - │ (yellow): Modified line
+  - ▾ (red): Deleted line(s) below
+
+* **Buffer Modified Plugin**: Shows unsaved changes with │ (blue) indicators for lines modified since last save.
+
+* **Line Indicator System**: New plugin API for gutter indicators with automatic position tracking. Indicators use byte-position markers that shift automatically when text is inserted/deleted. Priority system allows multiple indicator types to coexist (diagnostics > git > buffer modified).
+
+#### Bug Fixes
+
+* **Save As Undo History**: Fixed undo history being cleared after Save As due to auto-revert triggered by file watcher detecting the newly created file.
+
+---
+
+### v0.1.12
 
 #### Features
 
