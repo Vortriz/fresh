@@ -360,7 +360,11 @@ fn test_session_data_integrity() {
 
     // Verify session has expected data
     assert!(!session.split_states.is_empty(), "Should have split states");
-    assert_eq!(session.working_dir, project_dir);
+    // Canonicalize paths to handle macOS /var -> /private/var symlink
+    assert_eq!(
+        std::fs::canonicalize(&session.working_dir).unwrap(),
+        std::fs::canonicalize(&project_dir).unwrap()
+    );
 
     // Verify serialization works
     let json = serde_json::to_string_pretty(&session).unwrap();
@@ -370,7 +374,10 @@ fn test_session_data_integrity() {
     // Verify deserialization works
     let restored: fresh::session::Session = serde_json::from_str(&json).unwrap();
     assert_eq!(session.version, restored.version);
-    assert_eq!(session.working_dir, restored.working_dir);
+    assert_eq!(
+        std::fs::canonicalize(&session.working_dir).unwrap(),
+        std::fs::canonicalize(&restored.working_dir).unwrap()
+    );
 }
 
 /// Test scroll position is persisted for long files
