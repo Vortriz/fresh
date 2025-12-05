@@ -35,16 +35,28 @@ Fresh is engineered for speed. It delivers a near zero-latency experience, with 
 
 ## Installation
 
-### Via npm (recommended)
+| Platform | Method |
+|----------|--------|
+| macOS | [Homebrew](#macos-homebrew) |
+| Arch Linux | [AUR](#arch-linux-aur) |
+| Debian/Ubuntu | [.deb](#debianubuntu-deb) |
+| Fedora/RHEL | [.rpm](#fedorarhelopensuse-rpm) |
+| All platforms | [Pre-built binaries](#pre-built-binaries) |
+| npm | [npm / npx](#npm) |
+| Rust users | [crates.io](#from-cratesio) |
+| Developers | [From source](#from-source) |
+
+### macOS (Homebrew)
 
 ```bash
-npm install -g @fresh-editor/fresh-editor
+brew tap sinelaw/fresh
+brew install fresh-editor
 ```
 
-### Via npx (for a quick test)
+### Arch Linux ([AUR](https://aur.archlinux.org/packages/fresh-editor))
 
 ```bash
-npx @fresh-editor/fresh-editor
+yay -S fresh-editor
 ```
 
 ### Debian/Ubuntu (.deb)
@@ -63,15 +75,21 @@ Download the `.rpm` file from the [releases page](https://github.com/sinelaw/fre
 sudo rpm -i fresh-editor-*.rpm
 ```
 
-### Arch Linux ([AUR](https://aur.archlinux.org/packages/fresh-editor))
-
-```bash
-yay -S fresh-editor
-```
-
-### Other pre-built binaries
+### Pre-built binaries
 
 Download the latest release for your platform from the [releases page](https://github.com/sinelaw/fresh/releases).
+
+### npm
+
+```bash
+npm install -g @fresh-editor/fresh-editor
+```
+
+Or try it without installing:
+
+```bash
+npx @fresh-editor/fresh-editor
+```
 
 ### From crates.io
 
