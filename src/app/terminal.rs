@@ -489,6 +489,10 @@ impl Editor {
     }
 
     /// Render terminal content for all terminal buffers in split areas
+    ///
+    /// Renders all visible terminal buffers from their live terminal state.
+    /// This ensures terminals continue updating even when not focused, as long
+    /// as they remain visible in a split.
     pub fn render_terminal_splits(
         &self,
         frame: &mut ratatui::Frame,
@@ -501,26 +505,26 @@ impl Editor {
             usize,
         )],
     ) {
-        // Only render terminal content when in terminal mode
-        // In read-only mode, the buffer content is rendered by normal buffer rendering
-        if !self.terminal_mode {
-            return;
-        }
-
         for (_split_id, buffer_id, content_rect, _scrollbar_rect, _thumb_start, _thumb_end) in
             split_areas
         {
-            // Check if this buffer is the active terminal buffer
-            if *buffer_id != self.active_buffer() {
-                continue;
-            }
-
+            // Only render terminal buffers - skip regular file buffers
             if let Some(&terminal_id) = self.terminal_buffers.get(buffer_id) {
+                // Only render from live terminal state if in terminal mode OR if not the active buffer
+                // (when it's the active buffer but not in terminal mode, we're in read-only scrollback mode
+                // and should show the synced buffer content instead)
+                let is_active = *buffer_id == self.active_buffer();
+                if is_active && !self.terminal_mode {
+                    // Active buffer in read-only mode - let normal buffer rendering handle it
+                    continue;
+                }
                 // Get terminal content and cursor info
                 if let Some(handle) = self.terminal_manager.get(terminal_id) {
                     if let Ok(state) = handle.state.lock() {
                         let cursor_pos = state.cursor_position();
-                        let cursor_visible = state.cursor_visible();
+                        // Only show cursor for the active terminal in terminal mode
+                        let cursor_visible =
+                            state.cursor_visible() && is_active && self.terminal_mode;
                         let (_, rows) = state.size();
 
                         // Collect content
